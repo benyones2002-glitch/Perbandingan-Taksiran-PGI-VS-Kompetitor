@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taksiran Gadai HP: PGI vs Kompetitor</title>
+  <style>
+    :root {
+      --navy: #132B4C;
+      --navy-light: #1E3A5F;
+      --bg-app: #0F172A;
+      --bg-slide: #F8FAFC;
+      --card: #FFFFFF;
+      --border: #E2E8F0;
+      --text: #1E293B;
+      --muted: #64748B;
+      --pgi: #16A34A;
+      --pandai: #1D4ED8;
+      --raja: #D97706;
+      --sahabat: #0D9488;
+      --sakti: #B91C1C;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Inter, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 16px 76px;
+    }
+
+    /* Floating Toolbar */
+    .toolbar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 100;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      color: #F8FAFC;
+      font-size: 13px;
+    }
+
+    .toolbar button, .toolbar select {
+      background: rgba(255, 255, 255, 0.1);
+      color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .toolbar button:hover { background: rgba(255, 255, 255, 0.22); }
+    .toolbar button.primary { background: #16A34A; border-color: #16A34A; }
+    .toolbar button.primary:hover { background: #15803D; }
+    .toolbar select option { color: #0F172A; }
+    .slide-counter { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 52px; text-align: center; }
+
+    /* Slide Stage (16:9) */
+    .deck {
+      width: 100%;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-slide);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      flex-direction: column;
+      position: relative;
+    }
+
+    .slide.active { display: flex; }
+
+    /* Cover Slide */
+    .slide-cover {
+      background: linear-gradient(135deg, #0F233F 0%, #132B4C 55%, #1E3A5F 100%);
+      color: #FFFFFF;
+      padding: 56px 64px;
+      justify-content: space-between;
+      border-left: 14px solid var(--pgi);
+    }
+
+    .cover-top { display: flex; justify-content: space-between; align-items: center; }
+
+    .cover-badge {
+      background: rgba(22, 163, 74, 0.2);
+      border: 1px solid rgba(74, 222, 128, 0.45);
+      color: #86EFAC;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .cover-brand { font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: #CBD5E1; }
+
+    .cover-center h1 {
+      font-size: 46px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      max-width: 900px;
+    }
+
+    .cover-center p { font-size: 19px; line-height: 1.5; color: #CBD5E1; max-width: 820px; }
+
+    .cover-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      padding-top: 22px;
+    }
+
+    .cover-meta-item span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94A3B8;
+      margin-bottom: 4px;
+    }
+
+    .cover-meta-item strong { font-size: 14px; color: #F8FAFC; }
+
+    /* Standard Header */
+    .slide-header {
+      background: #FFFFFF;
+      border-bottom: 2px solid var(--border);
+      padding: 16px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .accent-pill {
+      padding: 6px 14px;
+      border-radius: 6px;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .slide-title { font-size: 20px; font-weight: 800; color: var(--navy); letter-spacing: -0.01em; }
+    .slide-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .header-right { text-align: right; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+    .header-right strong { color: var(--navy); }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      padding: 18px 36px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      border-top: 3px solid var(--navy);
+    }
+
+    .kpi-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value { font-size: 19px; font-weight: 800; color: var(--navy); }
+    .kpi-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Layouts */
+    .two-col { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; flex: 1; min-height: 0; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; }
+    .col-stack { display: flex; flex-direction: column; gap: 12px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card ul {
+      padding-left: 16px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th {
+      background: var(--navy);
+      color: #FFFFFF;
+      font-weight: 700;
+      text-align: left;
+      padding: 9px 10px;
+      font-size: 10.5px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) td { background: #F8FAFC; }
+    .num { text-align: right; font-weight: 600; }
+    .center { text-align: center; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .tag-win { background: #DCFCE7; color: #166534; }
+    .tag-mid { background: #FEF3C7; color: #92400E; }
+    .tag-low { background: #FEE2E2; color: #991B1B; }
+    .tag-na { background: #E2E8F0; color: #475569; }
+
+    /* Bar Chart */
+    .chart-list { display: flex; flex-direction: column; gap: 14px; justify-content: center; flex: 1; }
+    .chart-row { display: flex; flex-direction: column; gap: 5px; }
+    .chart-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .bar-track {
+      width: 100%;
+      height: 22px;
+      background: #E2E8F0;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+    .bar-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      color: #FFFFFF;
+      font-size: 10.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .bar-sub {
+      font-size: 10.5px;
+      color: var(--muted);
+    }
+
+    /* Highlight box */
+    .callout {
+      background: #EFF6FF;
+      border-left: 4px solid #1D4ED8;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: #1E3A8A;
+    }
+
+    .callout-green {
+      background: #F0FDF4;
+      border-left: 4px solid #16A34A;
+      color: #14532D;
+    }
+
+    .callout-amber {
+      background: #FFFBEB;
+      border-left: 4px solid #D97706;
+      color: #78350F;
+    }
+
+    /* Editable highlight */
+    [contenteditable="true"] { outline: none; border-radius: 4px; }
+    [contenteditable="true"]:hover { background: rgba(59, 130, 246, 0.08); }
+    [contenteditable="true"]:focus { background: #FEF9C3; box-shadow: 0 0 0 2px #FACC15; color: #0F172A; }
+
+    /* Footer */
+    .slide-footer {
+      padding: 8px 36px 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: #FFFFFF;
+    }
+
+    /* Print / Export PDF */
+    @media print {
+      @page { size: 13.333in 7.5in; margin: 0; }
+      body { background: #FFFFFF; padding: 0; }
+      .toolbar { display: none !important; }
+      .deck { max-width: none; aspect-ratio: auto; }
+      .slide {
+        display: flex !important;
+        width: 13.333in;
+        height: 7.5in;
+        border-radius: 0;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide slide-cover active" data-title="Cover">
+      <div class="cover-top">
+        <span class="cover-badge">Komparasi Taksiran Gadai HP</span>
+        <span class="cover-brand">PUSAT GADAI INDONESIA</span>
+      </div>
+      <div class="cover-center">
+        <h1 contenteditable="true">TAKSIRAN PGI VS KOMPETITOR</h1>
+        <p contenteditable="true">Analisis Perbandingan Nilai Taksiran Kotor &amp; Bersih, Skema Potongan Biaya, serta Posisi Daya Saing pada Unit Sampel HP</p>
+      </div>
+      <div class="cover-meta">
+        <div class="cover-meta-item">
+          <span>Unit Sampel</span>
+          <strong contenteditable="true">Redmi Note 14 8/256 • iPhone 13 • Samsung A07 4G</strong>
+        </div>
+        <div class="cover-meta-item">
+          <span>Entitas Pembanding</span>
+          <strong contenteditable="true">PGI vs Raja Gadai, Pandai Gadai, Sakti Gadai, Sahabat Gadai</strong>
+        </div>
+        <div class="cover-meta-item">
+          <span>Tanggal Laporan</span>
+          <strong contenteditable="true">16 November 2026 • Internal Confidential</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: MATRIKS KOMPARASI LINTAS UNIT -->
+    <section class="slide" data-title="Matriks Komparasi">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--navy);">RINGKASAN EKSEKUTIF</span>
+          <div>
+            <div class="slide-title">Matriks Komparasi Taksiran PGI vs Kompetitor</div>
+            <div class="slide-subtitle">Perbandingan nilai taksiran kotor &amp; terima bersih pada 3 unit HP sampel</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div>Klik angka untuk mengedit jika ada pembaruan</div>
+          <strong>5 Entitas • 3 Unit HP</strong>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="kpi-grid">
+          <div class="kpi-card" style="border-top-color: var(--pgi);">
+            <div class="kpi-label">Keunggulan PGI</div>
+            <div class="kpi-value">Redmi Note 14</div>
+            <div class="kpi-note">Tertinggi bersama Raja Gadai (Rp 2,2 jt)</div>
+          </div>
+          <div class="kpi-card" style="border-top-color: var(--pandai);">
+            <div class="kpi-label">Kompetitor Paling Agresif</div>
+            <div class="kpi-value">Pandai Gadai</div>
+            <div class="kpi-note">Tertinggi di iPhone 13 &amp; Samsung A07</div>
+          </div>
+          <div class="kpi-card" style="border-top-color: var(--raja);">
+            <div class="kpi-label">PGI vs Raja Gadai</div>
+            <div class="kpi-value">Kompetitif</div>
+            <div class="kpi-note">Sama di A07 &amp; Redmi; PGI +Rp 50 rb di iPhone 13</div>
+          </div>
+          <div class="kpi-card" style="border-top-color: var(--sakti);">
+            <div class="kpi-label">Gap Terlebar (PGI Unggul)</div>
+            <div class="kpi-value">+Rp 427.000</div>
+            <div class="kpi-note">Bersih Redmi Note 14 vs Sakti Gadai</div>
+          </div>
+        </div>
+
+        <div class="card" style="flex: 1;">
+          <div class="card-title">
+            <span>Tabel Ringkasan Taksiran Kotor &amp; Bersih</span>
+            <span style="font-size: 10px; font-weight: 500; color: var(--muted);">Format: Kotor / Terima Bersih (Rp)</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Unit HP &amp; Kondisi</th>
+                <th class="num" style="background: #14532D;">PGI</th>
+                <th class="num">Raja Gadai</th>
+                <th class="num">Pandai Gadai</th>
+                <th class="num">Sakti Gadai</th>
+                <th class="num">Sahabat Gadai</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Redmi Note 14 8/256</strong><br><span style="font-size: 10.5px; color: var(--muted);">Tanpa Dus</span></td>
+                <td class="num" contenteditable="true"><strong>2.200.000</strong><br><span style="color: var(--pgi);">Bersih: 1.940.000</span></td>
+                <td class="num" contenteditable="true"><strong>2.200.000</strong><br><span style="color: var(--raja);">Bersih: 1.940.000</span></td>
+                <td class="num" contenteditable="true"><span class="tag tag-na">Tidak ada data</span></td>
+                <td class="num" contenteditable="true"><strong>1.604.800</strong><br><span style="color: var(--sakti);">Bersih: 1.513.000</span></td>
+                <td class="num" contenteditable="true"><span class="tag tag-na">Tidak ada data</span></td>
+              </tr>
+              <tr>
+                <td><strong>iPhone 13</strong><br><span style="font-size: 10.5px; color: var(--muted);">Tanpa Dus</span></td>
+                <td class="num" contenteditable="true"><strong>4.950.000</strong><br><span style="color: var(--pgi);">Bersih: 4.395.000</span></td>
+                <td class="num" contenteditable="true"><strong>4.900.000</strong><br><span style="color: var(--muted);">Bersih: 4.350.000</span></td>
+                <td class="num" contenteditable="true"><strong>5.296.000</strong><br><span style="color: var(--pandai);">Bersih: 4.701.000</span></td>
+                <td class="num" contenteditable="true"><span class="tag tag-na">Tidak ada data</span></td>
+                <td class="num" contenteditable="true"><strong>4.800.000</strong><br><span style="color: var(--muted);">Bersih: 4.300.000</span></td>
+              </tr>
+              <tr>
+                <td><strong>Samsung Galaxy A07 4G 4/64</strong><br><span style="font-size: 10.5px; color: var(--muted);">Dengan Dus</span></td>
+                <td class="num" contenteditable="true"><strong>1.300.000</strong><br><span style="color: var(--pgi);">Bersih: 1.140.000</span></td>
+                <td class="num" contenteditable="true"><strong>1.300.000</strong><br><span style="color: var(--muted);">Bersih: 1.140.000</span></td>
+                <td class="num" contenteditable="true"><strong>1.700.000</strong><br><span style="color: var(--pandai);">Bersih: 1.500.000</span></td>
+                <td class="num" contenteditable="true"><span class="tag tag-na">Tidak ada data</span></td>
+                <td class="num" contenteditable="true"><span class="tag tag-na">Tidak ada data</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | Komparasi Taksiran Gadai HP</span>
+        <span>Slide 2 dari 7</span>
+      </footer>
+    </section>
+
+    <!-- SLIDE 3: REDMI NOTE 14 -->
+    <section class="slide" data-title="Redmi Note 14 8/256">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--pgi);">UNIT 1 • TANPA DUS</span>
+          <div>
+            <div class="slide-title">Redmi Note 14 8/256 (Tanpa Dus)</div>
+            <div class="slide-subtitle">Perbandingan taksiran kotor, terima bersih, dan selisih antar gerai</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div>Posisi PGI: <strong>Tertinggi (Kotor Rp 2.200.000)</strong></div>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title"><span>Visualisasi Perbandingan Nilai Taksiran</span></div>
+            <div class="chart-list">
+              <div class="chart-row">
+                <div class="chart-label"><span>PGI (Pusat Gadai Indonesia)</span><span>Kotor: Rp 2.200.000 | Bersih: Rp 1.940.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 100%; background: var(--pgi);">Rp 2.200.000 (Bersih Rp 1.940.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Raja Gadai</span><span>Kotor: Rp 2.200.000 | Bersih: Rp 1.940.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 100%; background: var(--raja);">Rp 2.200.000 (Bersih Rp 1.940.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Sakti Gadai</span><span>Kotor: Rp 1.604.800 | Bersih: Rp 1.513.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 73%; background: var(--sakti);">Rp 1.604.800 (Bersih Rp 1.513.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Pandai Gadai</span><span>Tidak ada data survei</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 18%; background: #94A3B8;">N/A</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-stack">
+            <div class="card">
+              <div class="card-title"><span>Rincian Angka &amp; Selisih vs PGI</span></div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entitas</th>
+                    <th class="num">Kotor</th>
+                    <th class="num">Bersih</th>
+                    <th class="num">Selisih Kotor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>PGI</strong></td><td class="num">2.200.000</td><td class="num">1.940.000</td><td class="num"><span class="tag tag-win">Acuan</span></td></tr>
+                  <tr><td>Raja Gadai</td><td class="num">2.200.000</td><td class="num">1.940.000</td><td class="num">0</td></tr>
+                  <tr><td>Sakti Gadai</td><td class="num">1.604.800</td><td class="num">1.513.000</td><td class="num" style="color: var(--pgi);">-595.200</td></tr>
+                  <tr><td>Pandai Gadai</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card" style="flex: 1;">
+              <div class="card-title"><span>Insight Unit 1</span></div>
+              <div class="callout callout-green">
+                <strong>PGI Unggul Jauh atas Sakti Gadai:</strong> Taksiran kotor PGI lebih tinggi <strong>Rp 595.200 (+37,1%)</strong> dan terima bersih lebih tinggi <strong>Rp 427.000 (+28,2%)</strong> dibanding Sakti Gadai.
+              </div>
+              <ul>
+                <li><strong>PGI vs Raja Gadai:</strong> Nilai kotor dan terima bersih identik di angka Rp 2.200.000 / Rp 1.940.000 dengan skema biaya yang sama (jasa 10%, admin 1%, asuransi Rp 10 ribu).</li>
+                <li><strong>Catatan Data:</strong> Taksiran Pandai Gadai pada unit ini belum tercantum pada data survei.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | Redmi Note 14 8/256 (Tanpa Dus)</span>
+        <span>Slide 3 dari 7</span>
+      </footer>
+    </section>
+
+    <!-- SLIDE 4: IPHONE 13 -->
+    <section class="slide" data-title="iPhone 13">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--pandai);">UNIT 2 • TANPA DUS</span>
+          <div>
+            <div class="slide-title">iPhone 13 (Tanpa Dus)</div>
+            <div class="slide-subtitle">Perbandingan taksiran kotor, terima bersih, dan selisih antar gerai</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div>Tertinggi: <strong>Pandai Gadai (Rp 5.296.000)</strong> • PGI Posisi #2</div>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title"><span>Visualisasi Perbandingan Nilai Taksiran</span></div>
+            <div class="chart-list">
+              <div class="chart-row">
+                <div class="chart-label"><span>Pandai Gadai</span><span>Kotor: Rp 5.296.000 | Bersih: Rp 4.701.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 100%; background: var(--pandai);">Rp 5.296.000 (Bersih Rp 4.701.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>PGI (Pusat Gadai Indonesia)</span><span>Kotor: Rp 4.950.000 | Bersih: Rp 4.395.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 93.5%; background: var(--pgi);">Rp 4.950.000 (Bersih Rp 4.395.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Raja Gadai</span><span>Kotor: Rp 4.900.000 | Bersih: Rp 4.350.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 92.5%; background: var(--raja);">Rp 4.900.000 (Bersih Rp 4.350.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Sahabat Gadai</span><span>Kotor: Rp 4.800.000 | Bersih: Rp 4.300.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 90.6%; background: var(--sahabat);">Rp 4.800.000 (Bersih Rp 4.300.000)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-stack">
+            <div class="card">
+              <div class="card-title"><span>Rincian Angka &amp; Selisih vs PGI</span></div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entitas</th>
+                    <th class="num">Kotor</th>
+                    <th class="num">Bersih</th>
+                    <th class="num">Selisih Bersih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Pandai Gadai</td><td class="num">5.296.000</td><td class="num">4.701.000</td><td class="num" style="color: var(--sakti);">+306.000</td></tr>
+                  <tr><td><strong>PGI</strong></td><td class="num"><strong>4.950.000</strong></td><td class="num"><strong>4.395.000</strong></td><td class="num"><span class="tag tag-mid">Acuan</span></td></tr>
+                  <tr><td>Raja Gadai</td><td class="num">4.900.000</td><td class="num">4.350.000</td><td class="num" style="color: var(--pgi);">-45.000</td></tr>
+                  <tr><td>Sahabat Gadai</td><td class="num">4.800.000</td><td class="num">4.300.000</td><td class="num" style="color: var(--pgi);">-95.000</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card" style="flex: 1;">
+              <div class="card-title"><span>Insight Unit 2</span></div>
+              <div class="callout callout-amber">
+                <strong>Pandai Gadai Memimpin di Segmen iPhone:</strong> Pandai Gadai memberi nilai bersih <strong>Rp 306.000 (+7,0%)</strong> lebih tinggi di atas PGI meski ketentuan persentase biayanya sama.
+              </div>
+              <ul>
+                <li><strong>PGI vs Raja &amp; Sahabat Gadai:</strong> PGI masih lebih tinggi Rp 45.000 (bersih) atas Raja Gadai dan Rp 95.000 (bersih) atas Sahabat Gadai.</li>
+                <li><strong>Implikasi:</strong> Pada unit <em>high-value</em> tanpa dus, plafon dasar Pandai Gadai lebih agresif sekitar +7%.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | iPhone 13 (Tanpa Dus)</span>
+        <span>Slide 4 dari 7</span>
+      </footer>
+    </section>
+
+    <!-- SLIDE 5: SAMSUNG GALAXY A07 -->
+    <section class="slide" data-title="Samsung Galaxy A07 4G">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--raja);">UNIT 3 • DENGAN DUS</span>
+          <div>
+            <div class="slide-title">Samsung Galaxy A07 4G 4/64 (Dengan Dus)</div>
+            <div class="slide-subtitle">Perbandingan taksiran kotor, terima bersih, dan selisih antar gerai</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div>Tertinggi: <strong>Pandai Gadai (Rp 1.700.000)</strong></div>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title"><span>Visualisasi Perbandingan Nilai Taksiran</span></div>
+            <div class="chart-list">
+              <div class="chart-row">
+                <div class="chart-label"><span>Pandai Gadai</span><span>Kotor: Rp 1.700.000 | Bersih: Rp 1.500.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 100%; background: var(--pandai);">Rp 1.700.000 (Bersih Rp 1.500.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>PGI (Pusat Gadai Indonesia)</span><span>Kotor: Rp 1.300.000 | Bersih: Rp 1.140.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 76.5%; background: var(--pgi);">Rp 1.300.000 (Bersih Rp 1.140.000)</div>
+                </div>
+              </div>
+              <div class="chart-row">
+                <div class="chart-label"><span>Raja Gadai</span><span>Kotor: Rp 1.300.000 | Bersih: Rp 1.140.000</span></div>
+                <div class="bar-track">
+                  <div class="bar-fill" style="width: 76.5%; background: var(--raja);">Rp 1.300.000 (Bersih Rp 1.140.000)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-stack">
+            <div class="card">
+              <div class="card-title"><span>Rincian Angka &amp; Selisih vs PGI</span></div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entitas</th>
+                    <th class="num">Kotor</th>
+                    <th class="num">Bersih</th>
+                    <th class="num">Selisih Bersih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Pandai Gadai</td><td class="num">1.700.000</td><td class="num">1.500.000</td><td class="num" style="color: var(--sakti);">+360.000</td></tr>
+                  <tr><td><strong>PGI</strong></td><td class="num"><strong>1.300.000</strong></td><td class="num"><strong>1.140.000</strong></td><td class="num"><span class="tag tag-mid">Acuan</span></td></tr>
+                  <tr><td>Raja Gadai</td><td class="num">1.300.000</td><td class="num">1.140.000</td><td class="num">0</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card" style="flex: 1;">
+              <div class="card-title"><span>Insight Unit 3</span></div>
+              <div class="callout">
+                <strong>Selisih Signifikan pada Unit Dengan Dus:</strong> Pandai Gadai menaksir <strong>Rp 400.000 lebih tinggi (kotor)</strong> atau <strong>Rp 360.000 lebih tinggi (bersih / +31,6%)</strong> dibanding PGI dan Raja Gadai.
+              </div>
+              <ul>
+                <li><strong>PGI vs Raja Gadai:</strong> Angka kotor dan bersih identik persis (Rp 1.300.000 / Rp 1.140.000).</li>
+                <li><strong>Potensi Evaluasi:</strong> Perlu ditinjau apakah Pandai Gadai memberikan premi lebih besar untuk unit <em>fullset / dengan dus</em> di kelas entry-level.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | Samsung Galaxy A07 4G 4/64 (Dengan Dus)</span>
+        <span>Slide 5 dari 7</span>
+      </footer>
+    </section>
+
+    <!-- SLIDE 6: KETENTUAN BIAYA & SKEMA -->
+    <section class="slide" data-title="Ketentuan Biaya">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--navy);">KETENTUAN &amp; BIAYA</span>
+          <div>
+            <div class="slide-title">Perbandingan Ketentuan Jasa, Administrasi &amp; Asuransi</div>
+            <div class="slide-subtitle">Struktur potongan yang memengaruhi nilai terima bersih nasabah</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div>5 Entitas Terdata</div>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="card" style="flex: 1;">
+          <div class="card-title"><span>Matriks Ketentuan Biaya per Brand</span></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Brand / Gerai</th>
+                <th class="center">Jasa / Bunga</th>
+                <th class="center">Administrasi</th>
+                <th class="center">Asuransi</th>
+                <th class="center">Tenor / Skema</th>
+                <th>Catatan Struktur Potongan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color: var(--pgi);">PGI (Pusat Gadai Indonesia)</strong></td>
+                <td class="center"><strong>10%</strong></td>
+                <td class="center"><strong>1%</strong></td>
+                <td class="center"><strong>Rp 10.000</strong></td>
+                <td class="center">Standar</td>
+                <td>Struktur identik dengan Raja Gadai &amp; Pandai Gadai.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--raja);">Raja Gadai</strong></td>
+                <td class="center"><strong>10%</strong></td>
+                <td class="center"><strong>1%</strong></td>
+                <td class="center"><strong>Rp 10.000</strong></td>
+                <td class="center">Standar</td>
+                <td>Potongan identik; selisih bersih murni ditentukan oleh taksiran kotor.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--pandai);">Pandai Gadai</strong></td>
+                <td class="center"><strong>10%</strong></td>
+                <td class="center"><strong>1%</strong></td>
+                <td class="center"><strong>Rp 10.000</strong></td>
+                <td class="center">Standar</td>
+                <td>Ketentuan sama dengan PGI, namun harga dasar taksiran lebih tinggi di iPhone 13 &amp; Samsung A07.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--sakti);">Sakti Gadai</strong></td>
+                <td class="center"><strong>11%</strong></td>
+                <td class="center"><strong>1%</strong></td>
+                <td class="center">—</td>
+                <td class="center">Standar</td>
+                <td>Persentase jasa tertinggi (11% + 1% admin), ditambah nilai taksiran kotor lebih rendah pada Redmi Note 14.</td>
+              </tr>
+              <tr>
+                <td><strong style="color: var(--sahabat);">Sahabat Gadai</strong></td>
+                <td class="center"><strong>5% / 15 hari</strong></td>
+                <td class="center">—</td>
+                <td class="center">—</td>
+                <td class="center"><strong>Tenor 30 hari</strong></td>
+                <td>Ekivalen 10% untuk 30 hari penuh (pada iPhone 13: kotor 4,8 jt → bersih 4,3 jt, selisih Rp 500 rb).</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout" style="margin-top: auto;">
+            <strong>Catatan Penting:</strong> Karena PGI, Raja Gadai, dan Pandai Gadai menerapkan ketentuan potongan yang sama (<strong>jasa 10%, admin 1%, asuransi Rp 10 ribu</strong>), maka faktor penentu utama selisih uang terima bersih nasabah di antara ketiganya adalah <strong>besaran nilai taksiran kotor</strong>.
+          </div>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | Ketentuan Biaya Gadai HP</span>
+        <span>Slide 6 dari 7</span>
+      </footer>
+    </section>
+
+    <!-- SLIDE 7: KESIMPULAN & REKOMENDASI -->
+    <section class="slide" data-title="Kesimpulan">
+      <header class="slide-header">
+        <div class="header-left">
+          <span class="accent-pill" style="background: var(--pgi);">KESIMPULAN</span>
+          <div>
+            <div class="slide-title">Kesimpulan &amp; Rekomendasi Strategis</div>
+            <div class="slide-subtitle">Sintesis posisi daya saing PGI berdasarkan data taksiran dan ketentuan biaya</div>
+          </div>
+        </div>
+      </header>
+      <div class="slide-body">
+        <div class="three-col">
+          <div class="card" style="border-top: 4px solid var(--pgi);">
+            <div class="card-title"><span>1. Posisi Daya Saing PGI</span></div>
+            <ul>
+              <li><strong>Unggul di Kelas Mid-Range (Redmi Note 14):</strong> PGI &amp; Raja Gadai memberi taksiran tertinggi (Rp 2,2 jt kotor), unggul jauh (+Rp 427 rb bersih) atas Sakti Gadai.</li>
+              <li><strong>Unggul Tipis atas Raja &amp; Sahabat Gadai di iPhone 13:</strong> PGI (Rp 4,395 jt bersih) lebih tinggi Rp 45 rb dari Raja Gadai dan Rp 95 rb dari Sahabat Gadai.</li>
+              <li><strong>Setara dengan Raja Gadai di Entry-Level:</strong> Pada Samsung A07 4G, PGI dan Raja Gadai identik (Rp 1,3 jt kotor / Rp 1,14 jt bersih).</li>
+            </ul>
+          </div>
+
+          <div class="card" style="border-top: 4px solid var(--pandai);">
+            <div class="card-title"><span>2. Titik Kalah vs Pandai Gadai</span></div>
+            <ul>
+              <li><strong>Pandai Gadai Paling Agresif:</strong> Meskipun ketentuan biayanya sama dengan PGI (10% + 1% + Rp 10 rb), Pandai Gadai unggul pada 2 dari 3 unit sampel.</li>
+              <li><strong>iPhone 13 (Tanpa Dus):</strong> Pandai Gadai lebih tinggi <strong>+Rp 306.000 bersih (+7,0%)</strong> dibanding PGI.</li>
+              <li><strong>Samsung A07 4G (Dengan Dus):</strong> Pandai Gadai lebih tinggi <strong>+Rp 360.000 bersih (+31,6%)</strong> dibanding PGI.</li>
+            </ul>
+          </div>
+
+          <div class="card" style="border-top: 4px solid var(--raja);">
+            <div class="card-title"><span>3. Rekomendasi Tindak Lanjut</span></div>
+            <ul>
+              <li><strong>Review Plafon Unit Dengan Dus &amp; iPhone:</strong> Evaluasi indeks harga pasar PGI untuk seri <em>entry-level fullset</em> (seperti Samsung A07) dan seri iPhone agar gap dengan Pandai Gadai tidak terlalu lebar.</li>
+              <li><strong>Lengkapi Data Survei:</strong> Lengkapi data taksiran Pandai Gadai pada Redmi Note 14 agar komparasi 100% simetris.</li>
+              <li><strong>Optimalkan Edukasi Nilai Bersih:</strong> Tekankan transparansi potongan di awal agar nasabah memahami nilai bersih yang diterima.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>PUSAT GADAI INDONESIA | Kesimpulan &amp; Rekomendasi</span>
+        <span>Slide 7 dari 7</span>
+      </footer>
+    </section>
+
+  </div>
+
+  <!-- Floating Toolbar -->
+  <div class="toolbar">
+    <button id="prevBtn" title="Slide Sebelumnya (←)">◀ Prev</button>
+    <span class="slide-counter" id="counter">1 / 7</span>
+    <button id="nextBtn" title="Slide Berikutnya (→)">Next ▶</button>
+    <select id="jumpSelect" title="Pilih Slide"></select>
+    <button id="resetBtn" title="Kembalikan teks awal">Reset</button>
+    <button id="printBtn" class="primary" title="Export ke PDF 16:9">Export PDF</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const counter = document.getElementById('counter');
+    const jumpSelect = document.getElementById('jumpSelect');
+    const STORAGE_KEY = 'pgi_vs_kompetitor_deck_v2';
+    let current = 0;
+
+    slides.forEach((s, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${idx + 1}. ${s.dataset.title}`;
+      jumpSelect.appendChild(opt);
+    });
+
+    function showSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      jumpSelect.value = current;
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => showSlide(current - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => showSlide(current + 1));
+    jumpSelect.addEventListener('change', (e) => showSlide(Number(e.target.value)));
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement && document.activeElement.isContentEditable) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') showSlide(current + 1);
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') showSlide(current - 1);
+    });
+
+    const editables = Array.from(document.querySelectorAll('[contenteditable="true"]'));
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    editables.forEach((el, idx) => {
+      if (saved[idx] !== undefined) el.innerHTML = saved[idx];
+      el.addEventListener('input', () => {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        data[idx] = el.innerHTML;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('Kembalikan seluruh teks ke data awal?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    });
+  </script>
+</body>
+</html>
